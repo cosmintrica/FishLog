@@ -1,0 +1,11 @@
+Please generate the initial HTML structure (including necessary CSS and JavaScript) for a fishing records website focused on Romanian fishing spots and records. Key features include:
+* An interactive map of Romania highlighting all known rivers, fishing ponds, lakes, and other bodies of water, populated with comprehensive data for all known fishing locations in Romania (not placeholders). Use a library like Leaflet.js for map integration.
+* User account creation panel and a submission panel for fishing records.
+* Simple click on a map location to submit a fishing record, with form fields for details like fish species, weight, date, photos, etc.
+* Include a comprehensive list of all major fish species found in Romania, from large ones like carp, pike, and catfish to smaller ones like roach, perch, and minnows. Allow selection from a dropdown or searchable list.
+* Generate various leaderboards: regional (by counties/județe), local (by specific river, pond, or lake), national, and global. All leaderboards must be filterable by fish species, county (județ), global scope, or specific water body type (river, lake, pond).
+* For each leaderboard, display the top 3 positions with visual trophies: gold cup for 1st, silver for 2nd, bronze for 3rd. Show rankings with details like user, record weight/size, location, and date.
+* User profile page showing their submitted records, personal bests, and their rankings in each type of leaderboard (by species, region, etc.).
+* Modern, minimalist design inspired by sites like arebaltapeste.ro (but not identical). Use clean UI with polished functionalities: beautiful popups/modals for forms and confirmations, easily readable text (sans-serif fonts, good contrast), large and attractive buttons.
+* Ensure the site is responsive for mobile and desktop. Use HTML5, CSS3 (perhaps with Flexbox/Grid for layout), and vanilla JavaScript or minimal libraries for interactivity. No backend yet—just frontend prototype with mock data for records and user profiles, but real, comprehensive data for all known fishing locations in Romania.
+Provide the generated code in a single, organized response, with sections for HTML, CSS, and JS, or as an archive with all files.
