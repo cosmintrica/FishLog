@@ -13,6 +13,16 @@ export function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  // definim componentele icon fără să ne batem capul cu versiunile de tipuri
+  const components: any = {
+    IconLeft: ({ className: c, ...p }: React.ComponentProps<"svg">) => (
+      <ChevronLeft className={cn("h-4 w-4", c)} {...p} />
+    ),
+    IconRight: ({ className: c, ...p }: React.ComponentProps<"svg">) => (
+      <ChevronRight className={cn("h-4 w-4", c)} {...p} />
+    ),
+  };
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -60,27 +70,9 @@ export function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        IconLeft: ({
-          className,
-          ...iconProps
-        }: React.ComponentProps<"svg">) => (
-          <ChevronLeft
-            className={cn("h-4 w-4", className)}
-            {...iconProps}
-          />
-        ),
-        IconRight: ({
-          className,
-          ...iconProps
-        }: React.ComponentProps<"svg">) => (
-          <ChevronRight
-            className={cn("h-4 w-4", className)}
-            {...iconProps}
-          />
-        ),
-      }}
-      {...props}
+      // <<— aici tipul e „any” tocmai ca să nu mai varieze între lib v8/v9
+      components={components}
+      {...(props as any)}
     />
   );
 }
