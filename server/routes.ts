@@ -1,179 +1,323 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { storage } from "./storage";
 import { insertUserSchema, insertFishingRecordSchema } from "@shared/schema";
-import { z } from "zod";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // User routes
+const JWT_SECRET = process.env.JWT_SECRET || "pescar-romania-secret-2024";
+
+// Middleware pentru verificare token
+const authMiddleware = (req: any, res: any, next: any) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ message: "Token lipsă" });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    req.userId = decoded.userId;
+    req.userEmail = decoded.email;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Token invalid" });
+  }
+};
+
+// Middleware pentru admin
+const adminMiddleware = (req: any, res: any, next: any) => {
+  if (req.userEmail !== 'cosmin.trica@outlook.com') {
+    return res.status(403).json({ message: "Acces interzis - doar pentru admin" });
+  }
+  next();
+};
+
+export function registerRoutes(app: Express) {
+  // ============= AUTH ROUTES =============
+  
+  // Înregistrare
   app.post("/api/auth/register", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
       
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists with this email" });
+      // Verifică dacă există deja
+      const existingEmail = await storage.getUserByEmail(userData.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email-ul este deja înregistrat" });
       }
-
+      
       const existingUsername = await storage.getUserByUsername(userData.username);
       if (existingUsername) {
-        return res.status(400).json({ message: "Username already taken" });
+        return res.status(400).json({ message: "Numele de utilizator este deja luat" });
       }
-
-      const user = await storage.createUser(userData);
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
+      // Creează user
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword
+      });
+      
+      // Generează token
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      
       const { password, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid user data", error });
+      
+      res.json({
+        user: userWithoutPassword,
+        token
+      });
+    } catch (error: any) {
+      console.error('Register error:', error);
+      res.status(400).json({ message: error.message || "Eroare la înregistrare" });
     }
   });
-
+  
+  // Login
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { email, password } = req.body;
       
-      const user = await storage.getUserByEmail(email);
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email și parolă obligatorii" });
       }
-
+      
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Credențiale invalide" });
+      }
+      
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Credențiale invalide" });
+      }
+      
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      
       const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      res.status(400).json({ message: "Login failed", error });
+      
+      res.json({
+        user: userWithoutPassword,
+        token
+      });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Eroare la autentificare" });
     }
   });
-
-  // Fishing locations routes
+  
+  // Verifică token
+  app.get("/api/auth/me", authMiddleware, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utilizator negăsit" });
+      }
+      
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Eroare server" });
+    }
+  });
+  
+  // ============= FISHING LOCATIONS =============
+  
   app.get("/api/fishing-locations", async (req, res) => {
     try {
       const locations = await storage.getFishingLocations();
       res.json(locations);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch locations", error });
+      res.status(500).json({ message: "Eroare la încărcarea locațiilor" });
     }
   });
-
+  
   app.get("/api/fishing-locations/:id", async (req, res) => {
     try {
       const location = await storage.getFishingLocation(req.params.id);
       if (!location) {
-        return res.status(404).json({ message: "Location not found" });
+        return res.status(404).json({ message: "Locație negăsită" });
       }
       res.json(location);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch location", error });
+      res.status(500).json({ message: "Eroare server" });
     }
   });
-
-  // Fishing records routes
+  
+  // ============= FISHING RECORDS =============
+  
+  // Get all records (verificate)
   app.get("/api/fishing-records", async (req, res) => {
     try {
       const records = await storage.getFishingRecords();
-      res.json(records);
+      // Returnează doar recordurile verificate pentru public
+      const verifiedRecords = records.filter(r => r.verified === true);
+      res.json(verifiedRecords);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch records", error });
+      res.status(500).json({ message: "Eroare la încărcarea recordurilor" });
     }
   });
-
+  
+  // Get user records
   app.get("/api/fishing-records/user/:userId", async (req, res) => {
     try {
       const records = await storage.getFishingRecordsByUser(req.params.userId);
       res.json(records);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user records", error });
+      res.status(500).json({ message: "Eroare server" });
     }
   });
-
-  app.post("/api/fishing-records", async (req, res) => {
+  
+  // Submit new record (necesită auth)
+  app.post("/api/fishing-records", authMiddleware, async (req: any, res) => {
     try {
-      const recordData = insertFishingRecordSchema.parse(req.body);
+      const recordData = {
+        ...req.body,
+        userId: req.userId,
+        verified: false // Toate recordurile noi sunt neverificate
+      };
+      
       const record = await storage.createFishingRecord(recordData);
       res.json(record);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid record data", error });
+    } catch (error: any) {
+      console.error('Record submission error:', error);
+      res.status(400).json({ message: error.message || "Eroare la înregistrarea recordului" });
     }
   });
-
-  // Leaderboard routes
+  
+  // ============= ADMIN ROUTES =============
+  
+  // Get pending records (doar admin)
+  app.get("/api/admin/pending-records", authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+      const records = await storage.getFishingRecords();
+      const pendingRecords = records.filter(r => !r.verified);
+      
+      // Adaugă informații despre user
+      const recordsWithUsers = await Promise.all(
+        pendingRecords.map(async (record) => {
+          const user = await storage.getUser(record.userId);
+          return {
+            ...record,
+            userFirstName: user?.firstName,
+            userLastName: user?.lastName,
+            userEmail: user?.email
+          };
+        })
+      );
+      
+      res.json(recordsWithUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Eroare server" });
+    }
+  });
+  
+  // Verify record (doar admin)
+  app.post("/api/admin/verify-record/:recordId", authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+      const { recordId } = req.params;
+      const { approved } = req.body;
+      
+      if (approved) {
+        await storage.verifyRecord(recordId);
+        res.json({ message: "Record aprobat cu succes" });
+      } else {
+        await storage.deleteRecord(recordId);
+        res.json({ message: "Record respins și șters" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Eroare la verificarea recordului" });
+    }
+  });
+  
+  // ============= LEADERBOARDS =============
+  
   app.get("/api/leaderboards/:type", async (req, res) => {
     try {
       const { type } = req.params;
-      const { species, county, waterType } = req.query;
+      const { species, county, waterType, limit = '10' } = req.query;
       
       let records = await storage.getFishingRecords();
       
-      // Filter by species if specified
+      // Doar recorduri verificate
+      records = records.filter(r => r.verified === true);
+      
+      // Filtrare
       if (species && species !== 'all') {
-        records = records.filter(record => record.species === species);
+        records = records.filter(r => r.species === species);
       }
       
-      // Filter by county if specified
       if (county && county !== 'all') {
-        records = records.filter(record => record.county === county);
+        records = records.filter(r => r.county === county);
       }
       
-      // Filter by water type if specified
       if (waterType && waterType !== 'all') {
-        records = records.filter(record => record.waterType === waterType);
+        records = records.filter(r => r.waterType === waterType);
       }
       
-      // Sort by weight (descending)
+      // Sortare după greutate
       records.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight));
       
-      // Get top 10 records
-      const topRecords = records.slice(0, 10);
+      // Limitare
+      const topRecords = records.slice(0, parseInt(limit as string));
       
-      // Get user information for each record
+      // Adaugă informații user
       const leaderboard = await Promise.all(
         topRecords.map(async (record, index) => {
           const user = await storage.getUser(record.userId);
           return {
             position: index + 1,
             record,
-            user: user ? { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName } : null
+            user: user ? {
+              id: user.id,
+              username: user.username,
+              firstName: user.firstName,
+              lastName: user.lastName
+            } : null
           };
         })
       );
       
       res.json(leaderboard);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch leaderboard", error });
+      res.status(500).json({ message: "Eroare server" });
     }
   });
-
-  // User profile route
+  
+  // ============= USER PROFILE =============
+  
   app.get("/api/users/:userId/profile", async (req, res) => {
     try {
       const { userId } = req.params;
       const user = await storage.getUser(userId);
       
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "Utilizator negăsit" });
       }
-
+      
       const userRecords = await storage.getFishingRecordsByUser(userId);
-      const allRecords = await storage.getFishingRecords();
+      const verifiedRecords = userRecords.filter(r => r.verified === true);
       
-      // Calculate user stats
-      const totalRecords = userRecords.length;
-      const personalBests = userRecords.reduce((bests: any, record) => {
+      // Stats
+      const totalRecords = verifiedRecords.length;
+      const personalBests: any = {};
+      
+      verifiedRecords.forEach(record => {
         const species = record.species;
-        if (!bests[species] || parseFloat(record.weight) > parseFloat(bests[species].weight)) {
-          bests[species] = record;
+        if (!personalBests[species] || parseFloat(record.weight) > parseFloat(personalBests[species].weight)) {
+          personalBests[species] = record;
         }
-        return bests;
-      }, {});
-      
-      // Calculate position in various leaderboards
-      const allRecordsByWeight = allRecords.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight));
-      const userBestRecord = userRecords.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))[0];
-      const nationalPosition = userBestRecord ? allRecordsByWeight.findIndex(r => r.id === userBestRecord.id) + 1 : null;
-      
-      // County leaderboard position
-      const countyRecords = allRecords.filter(r => r.county === user.firstName); // Temporary logic
-      const countyPosition = userBestRecord ? countyRecords.findIndex(r => r.id === userBestRecord.id) + 1 : null;
+      });
       
       const { password, ...userWithoutPassword } = user;
       
@@ -183,34 +327,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalRecords,
           personalBests: Object.values(personalBests),
           positions: {
-            national: nationalPosition,
-            county: countyPosition
+            national: null, // To be calculated
+            county: null
           }
         },
-        recentRecords: userRecords.slice(0, 5)
+        recentRecords: verifiedRecords.slice(0, 5)
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user profile", error });
+      res.status(500).json({ message: "Eroare server" });
     }
   });
-
-  // Stats route
+  
+  // ============= STATS =============
+  
   app.get("/api/stats", async (req, res) => {
     try {
       const locations = await storage.getFishingLocations();
       const records = await storage.getFishingRecords();
-      const users = Array.from((storage as any).users.values());
+      const verifiedRecords = records.filter(r => r.verified === true);
+      const users = await storage.getAllUsers();
       
       res.json({
         totalLocations: locations.length,
-        totalRecords: records.length,
+        totalRecords: verifiedRecords.length,
         activeUsers: users.length
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch stats", error });
+      res.status(500).json({ message: "Eroare server" });
     }
   });
-
-  const httpServer = createServer(app);
-  return httpServer;
 }
