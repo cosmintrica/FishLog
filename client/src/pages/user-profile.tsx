@@ -106,4 +106,108 @@ export default function UserProfile() {
           {/* Stats Cards */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center space-x-
+              <div className="flex items-center space-x-2">
+                <Fish className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="text-2xl font-bold" data-testid="stat-total-records">
+                    {profile.stats.totalRecords}
+                  </p>
+                  <p className="text-gray-600">Recorduri Totale</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <Trophy className="h-8 w-8 text-yellow-500" />
+                <div>
+                  <p className="text-2xl font-bold" data-testid="stat-national-position">
+                    #{nationalPos}
+                  </p>
+                  <p className="text-gray-600">Poziție Națională</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-8 w-8 text-blue-500" />
+                <div>
+                  <p className="text-2xl font-bold" data-testid="stat-county-position">
+                    #{countyPos}
+                  </p>
+                  <p className="text-gray-600">Poziție Județeană</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Personal Bests */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Trophy className="h-5 w-5 text-yellow-500 mr-2" />
+              Recorduri Personale
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {profile.stats.personalBests?.length ? (
+                profile.stats.personalBests.map((record, index) => (
+                  <div key={record.id} className="flex justify-between items-center p-4 bg-yellow-50 rounded-lg" data-testid={`personal-best-${index}`}>
+                    <div>
+                      <p className="font-semibold" data-testid={`pb-species-${index}`}>{record.species}</p>
+                      <p className="text-sm text-gray-600" data-testid={`pb-location-${index}`}>{record.location}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-primary" data-testid={`pb-weight-${index}`}>{record.weight} kg</p>
+                      <p className="text-xs text-gray-500" data-testid={`pb-date-${index}`}>{formatDate(record.dateCaught)}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-4" data-testid="no-personal-bests">Nu există recorduri personale</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Records */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Activitate Recentă</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {profile.recentRecords?.length ? (
+                profile.recentRecords.map((record, index) => (
+                  <div key={record.id} className="p-4 border rounded-lg" data-testid={`recent-record-${index}`}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold" data-testid={`recent-species-${index}`}>
+                          {record.species} {record.weight} kg
+                        </p>
+                        <p className="text-sm text-gray-600" data-testid={`recent-location-${index}`}>{record.location}</p>
+                        <p className="text-xs text-gray-500" data-testid={`recent-date-${index}`}>{formatDate(record.dateCaught)}</p>
+                      </div>
+                      <Badge variant={record.verified ? "default" : "secondary"} data-testid={`recent-status-${index}`}>
+                        {record.verified ? "Verificat" : "În așteptare"}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-4" data-testid="no-recent-records">Nu există recorduri recente</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
