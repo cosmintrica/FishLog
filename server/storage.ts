@@ -403,67 +403,66 @@ export class MemStorage implements IStorage {
     });
   }
 
-  private async initializeRecords() {
-    const users = Array.from(this.users.values());
-    const locations = Array.from(this.fishingLocations.values());
-    
-    // Creează recorduri demo pentru fiecare user
-    const recordsData = [
-      // Recorduri verificate
-      { species: "Somn", weight: "45.5", length: 180, verified: true },
-      { species: "Crap", weight: "22.3", length: 95, verified: true },
-      { species: "Știucă", weight: "12.8", length: 110, verified: true },
-      { species: "Șalău", weight: "8.5", length: 75, verified: true },
-      { species: "Biban", weight: "2.1", length: 35, verified: true },
-      { species: "Păstrăv", weight: "3.5", length: 45, verified: true },
-      { species: "Lipan", weight: "2.8", length: 42, verified: true },
-      { species: "Crap", weight: "18.7", length: 88, verified: true },
-      { species: "Somn", weight: "32.0", length: 155, verified: true },
-      { species: "Știucă", weight: "9.2", length: 92, verified: true },
-      { species: "Crap", weight: "15.5", length: 78, verified: true },
-      { species: "Roșioară", weight: "0.8", length: 25, verified: true },
-      { species: "Caras", weight: "1.5", length: 32, verified: true },
-      { species: "Clean", weight: "1.2", length: 28, verified: true },
-      { species: "Avat", weight: "4.5", length: 58, verified: true },
-      
-      // Recorduri neverificate (pentru admin panel)
-      { species: "Somn", weight: "55.2", length: 195, verified: false },
-      { species: "Crap", weight: "28.5", length: 105, verified: false },
-      { species: "Știucă", weight: "15.0", length: 120, verified: false },
-      { species: "Păstrăv", weight: "5.2", length: 55, verified: false },
-      { species: "Crap", weight: "19.8", length: 90, verified: false }
-    ];
+private async initializeRecords() {
+  const users = Array.from(this.users.values());
+  const locations = Array.from(this.fishingLocations.values());
 
-    recordsData.forEach((data, index) => {
-      const randomUser = users[Math.floor(Math.random() * users.length)];
-      const randomLocation = locations.filter(l => 
-        l.fishSpecies?.includes(data.species)
-      )[Math.floor(Math.random() * locations.filter(l => l.fishSpecies?.includes(data.species)).length)];
+  const recordsData = [
+    // verificate
+    { species: "Somn", weight: "45.5", length: 180, verified: true },
+    { species: "Crap", weight: "22.3", length: 95, verified: true },
+    { species: "Știucă", weight: "12.8", length: 110, verified: true },
+    { species: "Șalău", weight: "8.5", length: 75, verified: true },
+    { species: "Biban", weight: "2.1", length: 35, verified: true },
+    { species: "Păstrăv", weight: "3.5", length: 45, verified: true },
+    { species: "Lipan", weight: "2.8", length: 42, verified: true },
+    { species: "Crap", weight: "18.7", length: 88, verified: true },
+    { species: "Somn", weight: "32.0", length: 155, verified: true },
+    { species: "Știucă", weight: "9.2", length: 92, verified: true },
+    { species: "Crap", weight: "15.5", length: 78, verified: true },
+    { species: "Roșioară", weight: "0.8", length: 25, verified: true },
+    { species: "Caras", weight: "1.5", length: 32, verified: true },
+    { species: "Clean", weight: "1.2", length: 28, verified: true },
+    { species: "Avat", weight: "4.5", length: 58, verified: true },
+    // neverificate
+    { species: "Somn", weight: "55.2", length: 195, verified: false },
+    { species: "Crap", weight: "28.5", length: 105, verified: false },
+    { species: "Știucă", weight: "15.0", length: 120, verified: false },
+    { species: "Păstrăv", weight: "5.2", length: 55, verified: false },
+    { species: "Crap", weight: "19.8", length: 90, verified: false },
+  ] as const;
 
-      if (randomUser && randomLocation) {
-        const recordId = uuidv4();
-        const daysAgo = Math.floor(Math.random() * 90);
-        
-        this.fishingRecords.set(recordId, {
-          id: recordId,
-          userId: randomUser.id,
-          species: data.species,
-          weight: data.weight,
-          length: data.length,
-          location: randomLocation.name,
-          county: randomLocation.county,
-          waterType: randomLocation.type as any,
-          latitude: randomLocation.latitude,
-          longitude: randomLocation.longitude,
-          dateCaught: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
-          description: `Record capturat la ${randomLocation.name}`,
-          photos: [],
-          verified: data.verified,
-          createdAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
-        });
-      }
+  recordsData.forEach((data) => {
+    const randomUser = users[Math.floor(Math.random() * users.length)];
+    const locsForSpecies = locations.filter((l) =>
+      l.fishSpecies?.includes(data.species)
+    );
+    const randomLocation =
+      locsForSpecies[Math.floor(Math.random() * locsForSpecies.length)];
+
+    if (!randomUser || !randomLocation) return;
+
+    const recordId = uuidv4();
+    const daysAgo = Math.floor(Math.random() * 90);
+
+    this.fishingRecords.set(recordId, {
+      id: recordId,
+      userId: randomUser.id,
+      species: data.species,
+      weight: data.weight, // decimal => string în tipurile Drizzle
+      length: data.length ?? null, // << fix: fără undefined
+      location: randomLocation.name,
+      county: randomLocation.county,
+      waterType: randomLocation.type as FishingLocation["type"],
+      latitude: randomLocation.latitude,
+      longitude: randomLocation.longitude,
+      dateCaught: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
+      description: `Record capturat la ${randomLocation.name}`,
+      photos: [], // niciodată undefined
+      verified: data.verified,
+      createdAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
     });
-  }
+  });
 }
 
 export const storage = new MemStorage();
