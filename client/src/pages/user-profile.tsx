@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Fish, MapPin, Calendar } from "lucide-react";
+import { Trophy, Fish, MapPin } from "lucide-react";
 
 type UserProfileData = {
   user: {
@@ -44,7 +44,7 @@ export default function UserProfile() {
 
   const { data: profile, isLoading } = useQuery<UserProfileData>({
     queryKey: [`/api/users/${userId}/profile`],
-    enabled: !!userId
+    enabled: !!userId,
   });
 
   if (isLoading) {
@@ -61,19 +61,20 @@ export default function UserProfile() {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-gray-500">Utilizatorul nu a fost găsit</div>
+          <div className="text-center text-gray-500">
+            Utilizatorul nu a fost găsit
+          </div>
         </div>
       </div>
     );
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ro-RO", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("ro-RO", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
-  };
 
   const nationalPos = profile.stats.positions?.national ?? "N/A";
   const countyPos = profile.stats.positions?.county ?? "N/A";
@@ -86,13 +87,16 @@ export default function UserProfile() {
           <CardHeader>
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {profile.user.firstName?.[0] ?? "U"}{profile.user.lastName?.[0] ?? ""}
+                {profile.user.firstName?.[0] ?? "U"}
+                {profile.user.lastName?.[0] ?? ""}
               </div>
               <div>
                 <CardTitle className="text-2xl" data-testid="user-name">
                   {profile.user.firstName} {profile.user.lastName}
                 </CardTitle>
-                <p className="text-gray-600" data-testid="user-username">@{profile.user.username}</p>
+                <p className="text-gray-600" data-testid="user-username">
+                  @{profile.user.username}
+                </p>
                 <p className="text-sm text-gray-500" data-testid="user-since">
                   Membru din {formatDate(profile.user.createdAt)}
                 </p>
@@ -108,7 +112,10 @@ export default function UserProfile() {
               <div className="flex items-center space-x-2">
                 <Fish className="h-8 w-8 text-primary" />
                 <div>
-                  <p className="text-2xl font-bold" data-testid="stat-total-records">
+                  <p
+                    className="text-2xl font-bold"
+                    data-testid="stat-total-records"
+                  >
                     {profile.stats.totalRecords}
                   </p>
                   <p className="text-gray-600">Recorduri Totale</p>
@@ -122,7 +129,10 @@ export default function UserProfile() {
               <div className="flex items-center space-x-2">
                 <Trophy className="h-8 w-8 text-yellow-500" />
                 <div>
-                  <p className="text-2xl font-bold" data-testid="stat-national-position">
+                  <p
+                    className="text-2xl font-bold"
+                    data-testid="stat-national-position"
+                  >
                     #{nationalPos}
                   </p>
                   <p className="text-gray-600">Poziție Națională</p>
@@ -136,7 +146,10 @@ export default function UserProfile() {
               <div className="flex items-center space-x-2">
                 <MapPin className="h-8 w-8 text-blue-500" />
                 <div>
-                  <p className="text-2xl font-bold" data-testid="stat-county-position">
+                  <p
+                    className="text-2xl font-bold"
+                    data-testid="stat-county-position"
+                  >
                     #{countyPos}
                   </p>
                   <p className="text-gray-600">Poziție Județeană</p>
@@ -157,20 +170,51 @@ export default function UserProfile() {
           <CardContent>
             <div className="space-y-4">
               {profile.stats.personalBests?.length ? (
-                profile.stats.personalBests.map((record, index) => (
-                  <div key={record.id} className="flex justify-between items-center p-4 bg-yellow-50 rounded-lg" data-testid={`personal-best-${index}`}>
-                    <div>
-                      <p className="font-semibold" data-testid={`pb-species-${index}`}>{record.species}</p>
-                      <p className="text-sm text-gray-600" data-testid={`pb-location-${index}`}>{record.location}</p>
+                profile.stats.personalBests.map(
+                  (record: any, index: number) => (
+                    <div
+                      key={record.id}
+                      className="flex justify-between items-center p-4 bg-yellow-50 rounded-lg"
+                      data-testid={`personal-best-${index}`}
+                    >
+                      <div>
+                        <p
+                          className="font-semibold"
+                          data-testid={`pb-species-${index}`}
+                        >
+                          {record.species}
+                        </p>
+                        <p
+                          className="text-sm text-gray-600"
+                          data-testid={`pb-location-${index}`}
+                        >
+                          {record.location}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className="font-bold text-primary"
+                          data-testid={`pb-weight-${index}`}
+                        >
+                          {record.weight} kg
+                        </p>
+                        <p
+                          className="text-xs text-gray-500"
+                          data-testid={`pb-date-${index}`}
+                        >
+                          {formatDate(record.dateCaught)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary" data-testid={`pb-weight-${index}`}>{record.weight} kg</p>
-                      <p className="text-xs text-gray-500" data-testid={`pb-date-${index}`}>{formatDate(record.dateCaught)}</p>
-                    </div>
-                  </div>
-                ))
+                  )
+                )
               ) : (
-                <p className="text-gray-500 text-center py-4" data-testid="no-personal-bests">Nu există recorduri personale</p>
+                <p
+                  className="text-gray-500 text-center py-4"
+                  data-testid="no-personal-bests"
+                >
+                  Nu există recorduri personale
+                </p>
               )}
             </div>
           </CardContent>
@@ -184,24 +228,49 @@ export default function UserProfile() {
           <CardContent>
             <div className="space-y-4">
               {profile.recentRecords?.length ? (
-                profile.recentRecords.map((record, index) => (
-                  <div key={record.id} className="p-4 border rounded-lg" data-testid={`recent-record-${index}`}>
+                profile.recentRecords.map((record: any, index: number) => (
+                  <div
+                    key={record.id}
+                    className="p-4 border rounded-lg"
+                    data-testid={`recent-record-${index}`}
+                  >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold" data-testid={`recent-species-${index}`}>
+                        <p
+                          className="font-semibold"
+                          data-testid={`recent-species-${index}`}
+                        >
                           {record.species} {record.weight} kg
                         </p>
-                        <p className="text-sm text-gray-600" data-testid={`recent-location-${index}`}>{record.location}</p>
-                        <p className="text-xs text-gray-500" data-testid={`recent-date-${index}`}>{formatDate(record.dateCaught)}</p>
+                        <p
+                          className="text-sm text-gray-600"
+                          data-testid={`recent-location-${index}`}
+                        >
+                          {record.location}
+                        </p>
+                        <p
+                          className="text-xs text-gray-500"
+                          data-testid={`recent-date-${index}`}
+                        >
+                          {formatDate(record.dateCaught)}
+                        </p>
                       </div>
-                      <Badge variant={record.verified ? "default" : "secondary"} data-testid={`recent-status-${index}`}>
+                      <Badge
+                        variant={record.verified ? "default" : "secondary"}
+                        data-testid={`recent-status-${index}`}
+                      >
                         {record.verified ? "Verificat" : "În așteptare"}
                       </Badge>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-4" data-testid="no-recent-records">Nu există recorduri recente</p>
+                <p
+                  className="text-gray-500 text-center py-4"
+                  data-testid="no-recent-records"
+                >
+                  Nu există recorduri recente
+                </p>
               )}
             </div>
           </CardContent>
