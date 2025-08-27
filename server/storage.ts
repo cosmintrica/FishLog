@@ -358,6 +358,7 @@ export class MemStorage implements IStorage {
       { name: "Relax Fishing", latitude: "44.6833", longitude: "26.1333", type: "private_pond", county: "IF", fishSpecies: ["Crap", "Caras"], description: "Relaxare totală" },
       { name: "Wild Carp", latitude: "44.5333", longitude: "25.9500", type: "private_pond", county: "IF", fishSpecies: ["Crap"], description: "Crap sălbatic" }
     
+      ,
       { name: "Lacul Lazuri 5", latitude: "44.9500", longitude: "25.2000", type: "lake", county: "DB", fishSpecies: ["Crap", "Caras", "Somn"], description: "Baltă populară, pachete weekend" },
       { name: "Balta Bentu Mic Bordușani", latitude: "44.6500", longitude: "27.5667", type: "pond", county: "IL", fishSpecies: ["Crap", "Somn"], description: "Baltă administrată de AVPS Ialomița" },
       { name: "Lacul Pucioasa", latitude: "45.1030", longitude: "25.1300", type: "lake", county: "DB", fishSpecies: ["Crap", "Somn", "Păstrăv"], description: "Lac cu suprafață mare" },

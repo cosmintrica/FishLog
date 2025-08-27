@@ -6,6 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Trophy, Flag, Map, Waves, Search } from "lucide-react";
 import { fishSpecies, romanianCounties } from "@/data/fish-species";
 
+type LeaderboardEntry = {
+  id: string;
+  userId?: string;
+  userName?: string;
+  firstName?: string;
+  lastName?: string;
+  county?: string;
+  waterBody?: string;
+  species: string;
+  weight: number | string;
+  length?: number | string;
+  location: string;
+  dateCaught: string;
+};
+
 export function LeaderboardSection() {
   const [, setLocation] = useLocation();
   const [leaderboardType, setLeaderboardType] = useState("national");
@@ -14,15 +29,15 @@ export function LeaderboardSection() {
   const [waterBodyFilter, setWaterBodyFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: nationalLeaderboard } = useQuery({
+  const { data: nationalLeaderboard = [] } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leaderboards/national", speciesFilter, countyFilter, waterBodyFilter],
   });
 
-  const { data: regionalLeaderboard } = useQuery({
+  const { data: regionalLeaderboard = [] } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leaderboards/regional", speciesFilter, countyFilter || "B", waterBodyFilter], // București region
   });
 
-  const { data: localLeaderboard } = useQuery({
+  const { data: localLeaderboard = [] } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leaderboards/local", speciesFilter, countyFilter, waterBodyFilter || "lake"],
   });
 

@@ -7,6 +7,24 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { CheckCircle, XCircle, Eye, Calendar, MapPin, Fish, AlertTriangle } from "lucide-react";
 
+type PendingRecord = {
+  id: string;
+  userFirstName: string;
+  userLastName: string;
+  userEmail?: string;
+  species: string;
+  weight: number | string;
+  length?: number | string;
+  location: string;
+  county?: string;
+  waterType?: string;
+  dateCaught: string;
+  createdAt: string;
+  description?: string;
+  photos?: string[] | { url: string }[];
+  verified?: boolean;
+};
+
 export default function AdminPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -15,7 +33,7 @@ export default function AdminPanel() {
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = currentUser.email === 'cosmin.trica@outlook.com';
 
-  const { data: pendingRecords, isLoading } = useQuery({
+  const { data: pendingRecords = [], isLoading } = useQuery<PendingRecord[]>({
     queryKey: ["/api/admin/pending-records"],
     enabled: isAdmin
   });

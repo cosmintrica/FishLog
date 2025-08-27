@@ -8,10 +8,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { MapPin, Plus, TrendingUp } from "lucide-react";
 
+type SiteStats = {
+  totalRecords: number;
+  verifiedRecords: number;
+  totalUsers: number;
+  locationsCount?: number;
+};
+type RecentActivity = Array<{
+  id: string;
+  userName?: string;
+  species: string;
+  weight: number | string;
+  location: string;
+  dateCaught: string;
+}>;
+
 export default function Home() {
   const { user, login, logout } = useAuth();
 
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<SiteStats>({
     queryKey: ["/api/stats"],
   });
 

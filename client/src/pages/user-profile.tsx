@@ -3,11 +3,42 @@ import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Fish, MapPin, Calendar } from "lucide-react";
+type UserProfileData = {
+  user: {
+    id: string;
+    username: string;
+    email?: string;
+    firstName: string;
+    lastName: string;
+    createdAt: string;
+  };
+  stats: {
+    totalRecords: number;
+    personalBests: Array<{
+      id: string;
+      species: string;
+      weight: number | string;
+      length?: number;
+      location: string;
+      dateCaught: string;
+    }>;
+  };
+  recentRecords: Array<{
+    id: string;
+    species: string;
+    weight: number | string;
+    length?: number;
+    dateCaught: string;
+    location: string;
+    verified: boolean;
+  }>;
+};
+
 
 export default function UserProfile() {
   const { userId } = useParams();
   
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading } = useQuery<UserProfileData>({
     queryKey: [`/api/users/${userId}/profile`],
     enabled: !!userId
   });
@@ -17,6 +48,16 @@ export default function UserProfile() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">Se încarcă profilul...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center text-gray-500">Utilizatorul nu a fost găsit</div>
         </div>
       </div>
     );

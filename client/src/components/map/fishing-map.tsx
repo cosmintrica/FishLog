@@ -7,13 +7,25 @@ interface FishingMapProps {
   onLocationSelect: (location: any) => void;
 }
 
+
+type FishingLocationDTO = {
+  id: string;
+  name: string;
+  latitude: string;
+  longitude: string;
+  type: "river" | "lake" | "pond" | "private_pond" | "coastal" | string;
+  county: string;
+  fishSpecies?: string[] | null;
+  description?: string | null;
+};
+
 export function FishingMap({ onLocationSelect }: FishingMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
-  const { data: locations, isLoading } = useQuery({
+  const { data: locations = [], isLoading } = useQuery<FishingLocationDTO[]>({
     queryKey: ["/api/fishing-locations"],
   });
 
