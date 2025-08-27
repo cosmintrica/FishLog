@@ -20,11 +20,10 @@ export function FishingMap({ onLocationSelect }: FishingMapProps) {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Initialize Leaflet map
+    // Initialize Leaflet map dynamically (if not already loaded)
     const initMap = async () => {
       const L = (window as any).L;
       if (!L) {
-        // Load Leaflet dynamically
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -41,10 +40,10 @@ export function FishingMap({ onLocationSelect }: FishingMapProps) {
 
     const initMapInstance = () => {
       const L = (window as any).L;
-      const map = L.map(mapRef.current).setView([45.9432, 24.9668], 6);
-      
+      const map = L.map(mapRef.current).setView([45.9432, 24.9668], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap | PescArt România',
+        maxZoom: 18,
       }).addTo(map);
 
       mapInstanceRef.current = map;
@@ -63,105 +62,148 @@ export function FishingMap({ onLocationSelect }: FishingMapProps) {
   useEffect(() => {
     if (!locations || !mapInstanceRef.current) return;
 
-    const L = (window as any).L;
-    if (!L) return;
-
-    // Clear existing markers
-    markersRef.current.forEach(marker => {
-      mapInstanceRef.current.removeLayer(marker);
+    // remove existing markers
+    markersRef.current.forEach(m => {
+      try { mapInstanceRef.current.removeLayer(m); } catch(e) {}
     });
     markersRef.current = [];
 
-    // Define icons for different water types
-    const getIcon = (type: string) => {
-      const iconMap = {
-        river: '🏞️',
-        lake: '🏔️',
-        pond: '🟡',
-        private_pond: '🟠',
-        coastal: '🌊'
+    const L = (window as any).L;
+    if (!L) return;
+
+    const getMarkerOptions = (type: string) => {
+      const colors: Record<string,string> = {
+        river: '#3B82F6',
+        lake: '#60A5FA',
+        pond: '#0EA5A9',
+        private_pond: '#8B5CF6',
+        coastal: '#06B6D4'
       };
-      
-      return L.divIcon({
-        html: `<div style="background: white; border: 2px solid #2E8B57; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px;">${iconMap[type as keyof typeof iconMap] || '📍'}</div>`,
-        iconSize: [30, 30],
-        className: 'custom-div-icon'
-      });
+      const color = colors[type] || '#6B7280';
+      return {
+        radius: 6,
+        weight: 1,
+        color: '#ffffff',
+        fillColor: color,
+        fillOpacity: 0.9
+      };
     };
 
-    // Add markers
     (locations || []).forEach((location: any) => {
-      // Filter based on selected type
-      if (selectedFilter !== "all" && location.type !== selectedFilter) {
-        return;
-      }
+      if (selectedFilter !== "all" && location.type !== selectedFilter) return;
 
-      const marker = L.marker([parseFloat(location.latitude), parseFloat(location.longitude)], {
-        icon: getIcon(location.type)
-      }).addTo(mapInstanceRef.current);
+      const lat = parseFloat(location.latitude as any);
+      const lng = parseFloat(location.longitude as any);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-      const typeLabel = location.type === 'river' ? 'Râu' : 
-                       location.type === 'lake' ? 'Lac' : 
-                       location.type === 'pond' ? 'Baltă' :
-                       location.type === 'private_pond' ? 'Baltă Privată' :
-                       location.type === 'coastal' ? 'Litoral' : 'Altă Zonă';
-      
+      const marker = L.circleMarker([lat, lng], getMarkerOptions(location.type));
+
+      const typeLabel = location.type === 'river' ? 'Râu' :
+                        location.type === 'lake' ? 'Lac' :
+                        location.type === 'pond' ? 'Baltă' :
+                        location.type === 'private_pond' ? 'Baltă Privată' :
+                        location.type === 'coastal' ? 'Litoral' : 'Altă Zonă';
+
       const popupContent = `
-        <div style="padding: 8px; min-width: 200px;">
-          <h3 style="font-weight: bold; margin: 0 0 8px 0; color: #1f2937;">${location.name}</h3>
-          <p style="margin: 4px 0; color: #6b7280; font-size: 14px;">Tip: ${typeLabel}</p>
-          <p style="margin: 4px 0; color: #6b7280; font-size: 14px;">Pești: ${location.fishSpecies?.join(', ') || 'Nu sunt date'}</p>
-          ${location.description ? `<p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${location.description}</p>` : ''}
-          <button 
-            onclick="window.selectLocation('${location.id}')" 
-            style="background: #F59E0B; color: white; padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; margin-top: 8px; cursor: pointer;"
-          >
+        <div style="padding: 12px; min-width: 260px;">
+          <h3 style="font-weight: bold; margin: 0 0 8px 0; font-size: 16px;">${location.name}</h3>
+          <p style="margin: 4px 0; color: #6b7280;"><strong>Tip:</strong> ${typeLabel}</p>
+          <p style="margin: 4px 0; color: #6b7280;"><strong>Județ:</strong> ${location.county}</p>
+          ${location.fishSpecies ? `<p style="margin: 4px 0; color: #6b7280;"><strong>Specii:</strong> ${location.fishSpecies.join(', ')}</p>` : ''}
+          ${location.description ? `<p style="margin: 8px 0 0 0; font-size: 12px; color: #9ca3af;">${location.description}</p>` : ''}
+          <button id="open-submit-${location.id}" style="background: #F59E0B; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 14px; margin-top: 12px; cursor: pointer; width: 100%; font-weight: 500;">
             📝 Înregistrează Record Aici
           </button>
         </div>
       `;
-      
-      marker.bindPopup(popupContent);
+
+      marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+
+      marker.on('popupopen', function() {
+        setTimeout(() => { // wait for DOM
+          const btn = document.getElementById(`open-submit-${location.id}`);
+          if (btn) {
+            btn.addEventListener('click', () => {
+              if (typeof (window as any).openSubmitModal === 'function') {
+                (window as any).openSubmitModal({
+                  id: location.id,
+                  name: location.name,
+                  county: location.county,
+                  type: location.type,
+                  latitude: location.latitude,
+                  longitude: location.longitude
+                });
+              } else {
+                onLocationSelect({
+                  id: location.id,
+                  name: location.name,
+                  county: location.county,
+                  type: location.type,
+                  latitude: location.latitude,
+                  longitude: location.longitude
+                });
+              }
+            }, { once: true });
+          }
+        }, 50);
+      });
+
+      marker.addTo(mapInstanceRef.current);
       markersRef.current.push(marker);
     });
 
-    // Add global function for location selection
-    (window as any).selectLocation = (locationId: string) => {
+    // global fallback function
+    (window as any).selectFishingLocation = (locationId: string) => {
       const location = (locations || []).find((loc: any) => loc.id === locationId);
       if (location) {
-        onLocationSelect({
-          name: location.name,
-          county: location.county,
-          type: location.type,
-          latitude: location.latitude,
-          longitude: location.longitude
-        });
+        if (typeof (window as any).openSubmitModal === 'function') {
+          (window as any).openSubmitModal(location);
+        } else {
+          onLocationSelect({
+            id: location.id,
+            name: location.name,
+            county: location.county,
+            type: location.type,
+            latitude: location.latitude,
+            longitude: location.longitude
+          });
+        }
       }
     };
 
   }, [locations, selectedFilter, onLocationSelect]);
 
   const filterOptions = [
-    { value: "all", label: "Toate", icon: "🗺️" },
-    { value: "river", label: "Râuri", icon: "🏞️" },
-    { value: "lake", label: "Lacuri", icon: "🏔️" },
-    { value: "pond", label: "Bălți", icon: "🟡" },
-    { value: "private_pond", label: "Bălți Private", icon: "🟠" },
-    { value: "coastal", label: "Litoral", icon: "🌊" }
+    { value: "all", label: "Toate", icon: "All" },
+    { value: "river", label: "Râuri", icon: "R" },
+    { value: "lake", label: "Lacuri", icon: "L" },
+    { value: "pond", label: "Bălți", icon: "B" },
+    { value: "private_pond", label: "Private", icon: "P" },
+    { value: "coastal", label: "Litoral", icon: "C" }
   ];
 
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-900">Harta Locurilor de Pescuit</h3>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Harta Locurilor de Pescuit din România
+          </h3>
         </div>
-        <div className="h-96 w-full flex items-center justify-center bg-gray-50">
-          <p className="text-gray-500">Se încarcă harta...</p>
+        <div className="h-[500px] w-full flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <MapPin className="h-12 w-12 text-blue-500 mx-auto mb-3 animate-pulse" />
+            <p className="text-gray-500">Se încarcă locațiile de pescuit...</p>
+          </div>
         </div>
       </div>
     );
   }
+
+  const locationCount = locations?.length || 0;
+  const filteredCount = selectedFilter === "all" 
+    ? locationCount 
+    : locations?.filter((l: any) => l.type === selectedFilter).length || 0;
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden" id="map">
@@ -174,14 +216,9 @@ export function FishingMap({ onLocationSelect }: FishingMapProps) {
               variant={selectedFilter === option.value ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedFilter(option.value)}
-              className={`${
-                selectedFilter === option.value 
-                  ? "bg-primary text-white" 
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={`${selectedFilter === option.value ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
               data-testid={`filter-${option.value}`}
             >
-              <span className="mr-1">{option.icon}</span>
               {option.label}
             </Button>
           ))}

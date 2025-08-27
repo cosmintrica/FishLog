@@ -153,3 +153,19 @@
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+
+/* --- Fix pentru Leaflet care apare peste UI (modale/menu) --- */
+.leaflet-container {
+  z-index: 0 !important;
+}
+.leaflet-pane {
+  z-index: 0 !important;
+}
+.leaflet-popup {
+  z-index: 1000 !important;
+}
+/* Ensure modals have higher z-index than map popups */
+.header-modal, .dialog, .modal {
+  z-index: 1100 !important;
+}

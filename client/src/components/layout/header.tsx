@@ -17,7 +17,19 @@ export function Header({ user, onAuthSuccess, onLogout }: HeaderProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+
+  const [submitPrefilledLocation, setSubmitPrefilledLocation] = useState<any | null>(null);
+
+  // Expose global helper to open submit modal from map popups
+  useEffect(() => {
+    (window as any).openSubmitModal = (location: any) => {
+      setSubmitPrefilledLocation(location ?? null);
+      setIsSubmitModalOpen(true);
+    };
+    return () => { delete (window as any).openSubmitModal; };
+  }, []);
+const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
     { name: "Acasă", href: "/", icon: Fish },
@@ -183,6 +195,7 @@ export function Header({ user, onAuthSuccess, onLogout }: HeaderProps) {
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
         user={user}
+        prefilledLocation={submitPrefilledLocation}
       />
     </>
   );

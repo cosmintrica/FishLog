@@ -17,7 +17,7 @@ export const fishSpecies: FishSpecies[] = [
   },
   {
     id: 'catfish',
-    name: 'Som',
+    name: 'Somn',
     scientificName: 'Silurus glanis',
     category: 'large',
     description: 'Cel mai mare pește de apă dulce din România'

@@ -16,7 +16,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 27.3306, 
     type: "river", 
     county: "CL", 
-    fishSpecies: ["Som", "Crap", "Știucă"],
+    fishSpecies: ["Somn", "Crap", "Știucă"],
     description: "Sector principal al Dunării cu peștisori mari"
   },
   { 
@@ -25,7 +25,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 28.0080, 
     type: "river", 
     county: "GL", 
-    fishSpecies: ["Som", "Crap", "Biban"],
+    fishSpecies: ["Somn", "Crap", "Biban"],
     description: "Zonă cu apă adâncă și curenți moderați"
   },
   { 
@@ -81,7 +81,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 26.1858, 
     type: "lake", 
     county: "IF", 
-    fishSpecies: ["Crap", "Som", "Știucă", "Biban"],
+    fishSpecies: ["Crap", "Somn", "Știucă", "Biban"],
     description: "Lac natural cu fond nisipos și vegetație bogată"
   },
   { 
@@ -99,7 +99,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 26.0155, 
     type: "lake", 
     county: "B", 
-    fishSpecies: ["Som", "Crap", "Știucă"],
+    fishSpecies: ["Somn", "Crap", "Știucă"],
     description: "Lac artificial cu adâncimi mari"
   },
   { 
@@ -126,7 +126,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 25.9333, 
     type: "lake", 
     county: "NT", 
-    fishSpecies: ["Crap", "Som", "Știucă"],
+    fishSpecies: ["Crap", "Somn", "Știucă"],
     description: "Cel mai mare lac artificial din România"
   },
   { 
@@ -135,7 +135,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 28.6167, 
     type: "lake", 
     county: "CT", 
-    fishSpecies: ["Crap", "Som", "Biban"],
+    fishSpecies: ["Crap", "Somn", "Biban"],
     description: "Lac de apă dulce lângă Marea Neagră"
   },
 
@@ -146,7 +146,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 26.1531, 
     type: "pond", 
     county: "GR", 
-    fishSpecies: ["Crap", "Som", "Caras"],
+    fishSpecies: ["Crap", "Somn", "Caras"],
     description: "Baltă naturală cu vegetație abundentă"
   },
   { 
@@ -155,7 +155,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 27.3806, 
     type: "pond", 
     county: "IL", 
-    fishSpecies: ["Som", "Crap", "Știucă"],
+    fishSpecies: ["Somn", "Crap", "Știucă"],
     description: "Zonă de luncă cu ape liniștite"
   },
   { 
@@ -164,7 +164,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 29.3833, 
     type: "pond", 
     county: "TL", 
-    fishSpecies: ["Som", "Crap", "Știucă", "Roșioară"],
+    fishSpecies: ["Somn", "Crap", "Știucă", "Roșioară"],
     description: "Zonă sălbatică cu biodiversitate excepțională"
   },
   { 
@@ -173,7 +173,7 @@ export const fishingLocations: FishingLocationData[] = [
     longitude: 27.9575, 
     type: "pond", 
     county: "BR", 
-    fishSpecies: ["Som", "Crap", "Biban"],
+    fishSpecies: ["Somn", "Crap", "Biban"],
     description: "Zonă de luncă cu canale naturale"
   },
 
