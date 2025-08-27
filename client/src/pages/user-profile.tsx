@@ -23,7 +23,6 @@ type UserProfileData = {
       location: string;
       dateCaught: string;
     }>;
-    /** NOU: pentru cardurile cu poziții */
     positions?: {
       national?: number;
       county?: number;
