@@ -10,7 +10,7 @@
     "dev:client": "vite",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
-    "build:server": "tsc --noEmit && esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist --external:./node_modules/*",
+    "build:server": "tsc -p tsconfig.server.json --noEmit && esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist --external:./node_modules/*",
     "start": "node dist/index.js",
     "preview": "vite preview"
   },
